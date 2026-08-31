@@ -3,16 +3,42 @@ import './App.css'
 
 const API_URL = 'http://127.0.0.1:8000'
 
+const exampleQuestions = [
+  {
+    icon: '↗',
+    label: 'Pipeline',
+    question: "How's our pipeline looking for renewables this quarter?",
+  },
+  {
+    icon: '◆',
+    label: 'Top Sector',
+    question: 'Which sector has the largest pipeline?',
+  },
+  {
+    icon: '₹',
+    label: 'Revenue',
+    question: 'How much revenue do we have?',
+  },
+  {
+    icon: '▦',
+    label: 'Operations',
+    question: 'Show me our work orders',
+  },
+  {
+    icon: '◉',
+    label: 'Billing',
+    question: 'What is happening with billing?',
+  },
+]
+
 function App() {
   const [question, setQuestion] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const askQuestion = async (text = question) => {
-    const query = text.trim()
-
-    if (!query) return
+  const askQuestion = async () => {
+    if (!question.trim() || loading) return
 
     setLoading(true)
     setError('')
@@ -22,367 +48,713 @@ function App() {
       const response = await fetch(`${API_URL}/ask`, {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
-          question: query,
+          question: question.trim(),
         }),
       })
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`)
+        throw new Error(`Server error: ${response.status}`)
       }
 
       const data = await response.json()
       setResult(data)
     } catch (err) {
       setError(
-        'Unable to connect to the BI backend. Make sure FastAPI is running on port 8000.'
+        'Unable to connect to the BI Agent. Please make sure the backend server is running.'
       )
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    askQuestion()
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      askQuestion()
+    }
   }
 
-  const exampleQuestions = [
-    "How's our pipeline looking for renewables this quarter?",
-    'Which sector has the largest pipeline?',
-    'How much revenue do we have?',
-    'Show me our work orders',
-    'What is happening with billing?',
-  ]
+  const useExample = (example) => {
+    setQuestion(example)
+    setResult(null)
+    setError('')
+  }
+
+  const resetQuery = () => {
+    setQuestion('')
+    setResult(null)
+    setError('')
+  }
+
+  const getIntentLabel = () => {
+    if (!result?.intent?.intent) return 'BUSINESS ANALYSIS'
+
+    return result.intent.intent
+      .replaceAll('_', ' ')
+      .toUpperCase()
+  }
+
+  const getPeriod = () => {
+    return result?.data?.period
+      ? result.data.period.replaceAll('_', ' ').toUpperCase()
+      : 'ALL TIME'
+  }
 
   return (
     <div className="app">
-      <header className="header">
+
+      {/* =====================================================
+          BACKGROUND
+      ===================================================== */}
+
+      <div className="background-grid"></div>
+
+      <div className="ambient ambient-one"></div>
+      <div className="ambient ambient-two"></div>
+      <div className="ambient ambient-three"></div>
+
+
+      {/* =====================================================
+          TOP NAVIGATION
+      ===================================================== */}
+
+      <header className="topbar">
+
         <div className="brand">
-          <div className="brand-icon">S</div>
 
-          <div>
-            <h1>Skylark BI Agent</h1>
-            <p>Monday.com Business Intelligence</p>
+          <div className="brand-logo">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
+
+          <div className="brand-info">
+            <div className="brand-name">
+              SKYLARK
+            </div>
+
+            <div className="brand-subtitle">
+              BUSINESS INTELLIGENCE
+            </div>
+          </div>
+
         </div>
 
-        <div className="status">
-          <span className="status-dot"></span>
-          Connected
+
+        <div className="topbar-right">
+
+          <div className="system-status">
+            <span className="status-light"></span>
+
+            <div>
+              <strong>LIVE</strong>
+              <small>MONDAY.COM</small>
+            </div>
+          </div>
+
+          <div className="version">
+            AI / BI
+          </div>
+
         </div>
+
       </header>
 
+
+      {/* =====================================================
+          MAIN CONTENT
+      ===================================================== */}
+
       <main className="main">
-        <section className="hero-section">
-          <div className="eyebrow">BUSINESS INTELLIGENCE</div>
 
-          <h2>
-            Ask your business
-            <br />
-            <span>anything.</span>
-          </h2>
 
-          <p className="hero-description">
-            Get real-time insights from your Monday.com deals and work orders.
-          </p>
+        {/* =================================================
+            HERO
+        ================================================= */}
 
-          <form className="question-form" onSubmit={handleSubmit}>
-            <div className="input-wrapper">
-              <span className="search-icon">⌕</span>
+        {!result && !loading && (
 
-              <input
-                type="text"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                placeholder="Ask a business question..."
-                disabled={loading}
-              />
+          <section className="hero">
 
-              <button type="submit" disabled={loading || !question.trim()}>
-                {loading ? 'Analyzing...' : 'Ask'}
-              </button>
+            <div className="hero-tag">
+
+              <span className="tag-line"></span>
+
+              <span>INTELLIGENT BUSINESS ANALYTICS</span>
+
+              <span className="tag-line"></span>
+
             </div>
-          </form>
 
-          <div className="examples">
-            <span>Try asking:</span>
 
-            {exampleQuestions.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => {
-                  setQuestion(item)
-                  askQuestion(item)
-                }}
-                disabled={loading}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </section>
+            <h1>
 
-        {loading && (
-          <section className="loading-card">
-            <div className="loader"></div>
+              <span className="hero-main">
+                Ask your business.
+              </span>
 
-            <div>
-              <strong>Analyzing your data</strong>
-              <p>
-                Fetching the latest information from Monday.com and processing
-                your question...
-              </p>
-            </div>
-          </section>
-        )}
+              <span className="hero-gradient">
+                Get intelligent answers.
+              </span>
 
-        {error && (
-          <section className="error-card">
-            <div className="error-icon">!</div>
+            </h1>
 
-            <div>
-              <strong>Connection error</strong>
-              <p>{error}</p>
-            </div>
-          </section>
-        )}
 
-        {result && !loading && (
-          <section className="result-section">
-            <div className="result-header">
+            <p className="hero-description">
+
+              Turn your Monday.com data into actionable business intelligence.
+              Ask questions naturally across pipeline, revenue, operations and billing.
+
+            </p>
+
+
+            <div className="hero-stats">
+
               <div>
-                <div className="result-label">ANALYSIS RESULT</div>
-                <h3>{result.question}</h3>
+                <strong>01</strong>
+                <span>Pipeline</span>
               </div>
 
-              <div className="intent-badge">
-                {result.intent?.intent || 'general'}
+              <div>
+                <strong>02</strong>
+                <span>Revenue</span>
               </div>
+
+              <div>
+                <strong>03</strong>
+                <span>Operations</span>
+              </div>
+
+              <div>
+                <strong>04</strong>
+                <span>Billing</span>
+              </div>
+
             </div>
 
-            <div className="answer-card">
-              <div className="answer-header">
-                <div className="answer-icon">✦</div>
+          </section>
+
+        )}
+
+
+        {/* =================================================
+            QUERY AREA
+        ================================================= */}
+
+        <section className="query-wrapper">
+
+          <div className="query-card">
+
+            <div className="query-card-top">
+
+              <div className="analyst-label">
+
+                <div className="analyst-icon">
+                  ✦
+                </div>
 
                 <div>
-                  <span>BI AGENT</span>
-                  <h4>Business Analysis</h4>
-                </div>
-              </div>
-
-              <div className="answer-text">
-                {result.answer || result.message}
-              </div>
-            </div>
-
-            {result.data && (
-              <DataDisplay data={result.data} answerType={result.answer_type} />
-            )}
-
-            {result.warnings && result.warnings.length > 0 && (
-              <div className="warnings-card">
-                <div className="warnings-title">
-                  <span>⚠</span>
-                  Data quality notes
+                  <span>SKYLARK AI</span>
+                  <small>BUSINESS ANALYST</small>
                 </div>
 
-                {result.warnings.map((warning, index) => (
-                  <div className="warning" key={index}>
-                    {warning}
-                  </div>
-                ))}
               </div>
-            )}
-          </section>
-        )}
 
-        {!result && !loading && !error && (
-          <section className="feature-section">
-            <div className="feature">
-              <div className="feature-icon">↗</div>
-              <h3>Pipeline Intelligence</h3>
-              <p>
-                Analyze deals, pipeline value, weighted pipeline and sector
-                performance.
-              </p>
+
+              <div className="keyboard-hint">
+
+                <kbd>ENTER</kbd>
+
+                <span>to analyze</span>
+
+              </div>
+
             </div>
 
-            <div className="feature">
-              <div className="feature-icon">₹</div>
-              <h3>Revenue Insights</h3>
-              <p>
-                Track billed revenue, collections and outstanding amounts.
-              </p>
+
+            <div className="input-area">
+
+              <textarea
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask a question about your business..."
+                rows="3"
+              />
+
+              <div className="input-glow"></div>
+
             </div>
 
-            <div className="feature">
-              <div className="feature-icon">◫</div>
-              <h3>Operations</h3>
-              <p>
-                Understand work orders, sectors and operational status.
-              </p>
+
+            <div className="query-bottom">
+
+              <div className="query-capability">
+
+                <span className="sparkle">
+                  ✦
+                </span>
+
+                <span>
+                  Natural language → Business intelligence
+                </span>
+
+              </div>
+
+
+              <button
+                className="ask-button"
+                onClick={askQuestion}
+                disabled={loading || !question.trim()}
+              >
+
+                {loading ? (
+                  <>
+                    <span className="button-spinner"></span>
+                    ANALYZING
+                  </>
+                ) : (
+                  <>
+                    ANALYZE
+                    <span className="button-arrow">→</span>
+                  </>
+                )}
+
+              </button>
+
             </div>
-          </section>
-        )}
-      </main>
 
-      <footer>
-        <span>Skylark Monday BI Agent</span>
-        <span>Powered by FastAPI + React + Monday.com</span>
-      </footer>
-    </div>
-  )
-}
-
-function DataDisplay({ data, answerType }) {
-  if (answerType === 'pipeline') {
-    return (
-      <div className="metrics-grid">
-        <MetricCard
-          label="Pipeline Value"
-          value={formatCurrency(data.pipeline_value)}
-        />
-
-        <MetricCard
-          label="Weighted Pipeline"
-          value={formatCurrency(data.weighted_pipeline)}
-        />
-
-        <MetricCard
-          label="Deals"
-          value={data.deal_count ?? 0}
-        />
-
-        <MetricCard
-          label="Period"
-          value={formatPeriod(data.period)}
-        />
-      </div>
-    )
-  }
-
-  if (answerType === 'revenue') {
-    return (
-      <div className="metrics-grid">
-        <MetricCard
-          label="Billed Revenue"
-          value={formatCurrency(data.billed_revenue)}
-        />
-
-        <MetricCard
-          label="Collected Revenue"
-          value={formatCurrency(data.collected_revenue)}
-        />
-
-        <MetricCard
-          label="Outstanding"
-          value={formatCurrency(data.outstanding_revenue)}
-        />
-
-        <MetricCard
-          label="Work Orders"
-          value={data.work_order_count ?? 0}
-        />
-      </div>
-    )
-  }
-
-  if (answerType === 'sector_breakdown' && Array.isArray(data)) {
-    return (
-      <div className="table-card">
-        <div className="table-title">Sector Breakdown</div>
-
-        <div className="table">
-          <div className="table-row table-head">
-            <span>Sector</span>
-            <span>Deals</span>
-            <span>Pipeline</span>
           </div>
 
-          {data.map((sector, index) => (
-            <div className="table-row" key={index}>
-              <span>{sector.sector_clean}</span>
-              <span>{sector.deal_count}</span>
-              <span>{formatCurrency(sector.pipeline_value)}</span>
+        </section>
+
+
+        {/* =================================================
+            QUICK QUESTIONS
+        ================================================= */}
+
+        {!result && !loading && (
+
+          <section className="quick-section">
+
+            <div className="section-heading">
+
+              <div>
+                <span className="section-number">
+                  01
+                </span>
+
+                <span>
+                  QUICK ANALYSIS
+                </span>
+              </div>
+
+              <p>
+                Start with a suggested business question
+              </p>
+
             </div>
-          ))}
+
+
+            <div className="quick-grid">
+
+              {exampleQuestions.map((item) => (
+
+                <button
+                  className="quick-card"
+                  key={item.label}
+                  onClick={() => useExample(item.question)}
+                >
+
+                  <div className="quick-card-icon">
+                    {item.icon}
+                  </div>
+
+
+                  <div className="quick-card-content">
+
+                    <strong>
+                      {item.label}
+                    </strong>
+
+                    <span>
+                      {item.question}
+                    </span>
+
+                  </div>
+
+
+                  <div className="quick-card-arrow">
+                    →
+                  </div>
+
+                </button>
+
+              ))}
+
+            </div>
+
+          </section>
+
+        )}
+
+
+        {/* =================================================
+            LOADING
+        ================================================= */}
+
+        {loading && (
+
+          <section className="loading-container">
+
+            <div className="loading-card">
+
+              <div className="loading-visual">
+
+                <div className="orbit orbit-one"></div>
+                <div className="orbit orbit-two"></div>
+
+                <div className="loading-core">
+                  ✦
+                </div>
+
+              </div>
+
+
+              <div className="loading-content">
+
+                <div className="loading-label">
+                  LIVE ANALYSIS
+                </div>
+
+                <h2>
+                  Analyzing your business
+                </h2>
+
+                <p>
+                  Connecting to Monday.com and processing your business data.
+                </p>
+
+                <div className="loading-progress">
+                  <span></span>
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+        )}
+
+
+        {/* =================================================
+            ERROR
+        ================================================= */}
+
+        {error && (
+
+          <section className="error-container">
+
+            <div className="error-card">
+
+              <div className="error-symbol">
+                !
+              </div>
+
+              <div>
+
+                <strong>
+                  CONNECTION ERROR
+                </strong>
+
+                <p>
+                  {error}
+                </p>
+
+              </div>
+
+              <button
+                onClick={askQuestion}
+              >
+                RETRY
+              </button>
+
+            </div>
+
+          </section>
+
+        )}
+
+
+        {/* =================================================
+            RESULT
+        ================================================= */}
+
+        {result && !loading && (
+
+          <section className="result-section">
+
+
+            {/* RESULT HEADER */}
+
+            <div className="result-header">
+
+              <div>
+
+                <div className="result-status">
+
+                  <span></span>
+
+                  ANALYSIS COMPLETE
+
+                </div>
+
+                <h2>
+                  Business Intelligence
+                </h2>
+
+                <p>
+                  Your business question has been analyzed against live data.
+                </p>
+
+              </div>
+
+
+              <button
+                className="new-query"
+                onClick={resetQuery}
+              >
+                <span>+</span>
+                NEW QUERY
+              </button>
+
+            </div>
+
+
+            {/* QUESTION */}
+
+            <div className="asked-card">
+
+              <div className="asked-label">
+                YOU ASKED
+              </div>
+
+              <div className="asked-question">
+                “{result.question}”
+              </div>
+
+            </div>
+
+
+            {/* SUMMARY METRICS */}
+
+            <div className="result-metrics">
+
+              <div className="metric-card">
+
+                <span className="metric-label">
+                  ANALYSIS TYPE
+                </span>
+
+                <strong>
+                  {getIntentLabel()}
+                </strong>
+
+              </div>
+
+
+              <div className="metric-card">
+
+                <span className="metric-label">
+                  DATA PERIOD
+                </span>
+
+                <strong>
+                  {getPeriod()}
+                </strong>
+
+              </div>
+
+
+              <div className="metric-card">
+
+                <span className="metric-label">
+                  DATA SOURCE
+                </span>
+
+                <strong>
+                  MONDAY.COM
+                </strong>
+
+              </div>
+
+
+              <div className="metric-card verified">
+
+                <span className="metric-label">
+                  STATUS
+                </span>
+
+                <strong>
+                  ✓ VERIFIED
+                </strong>
+
+              </div>
+
+            </div>
+
+
+            {/* AI ANSWER */}
+
+            <div className="answer-card">
+
+              <div className="answer-header">
+
+                <div className="answer-title">
+
+                  <div className="answer-icon">
+                    ✦
+                  </div>
+
+                  <div>
+
+                    <span>
+                      AI INSIGHT
+                    </span>
+
+                    <small>
+                      SKYLARK BUSINESS ANALYST
+                    </small>
+
+                  </div>
+
+                </div>
+
+
+                <div className="intent-badge">
+
+                  {getIntentLabel()}
+
+                </div>
+
+              </div>
+
+
+              <div className="answer-content">
+
+                {result.answer || result.message}
+
+              </div>
+
+            </div>
+
+
+            {/* RAW DATA */}
+
+            {result.data && (
+
+              <details className="raw-data">
+
+                <summary>
+
+                  <div>
+
+                    <span className="raw-number">
+                      02
+                    </span>
+
+                    <span>
+                      ANALYSIS DATA
+                    </span>
+
+                  </div>
+
+                  <span className="expand">
+                    VIEW DATA +
+                  </span>
+
+                </summary>
+
+
+                <div className="raw-content">
+
+                  <pre>
+                    {JSON.stringify(result.data, null, 2)}
+                  </pre>
+
+                </div>
+
+              </details>
+
+            )}
+
+
+            {/* NEW QUESTION */}
+
+            <div className="result-footer">
+
+              <span>
+                Want to explore another metric?
+              </span>
+
+              <button
+                onClick={resetQuery}
+              >
+                ASK ANOTHER QUESTION →
+              </button>
+
+            </div>
+
+          </section>
+
+        )}
+
+      </main>
+
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer className="footer">
+
+        <div className="footer-brand">
+
+          <span className="footer-mark">
+            ◈
+          </span>
+
+          <span>
+            SKYLARK
+          </span>
+
         </div>
-      </div>
-    )
-  }
 
-  if (answerType === 'operations') {
-    return (
-      <div className="distribution-grid">
-        <DistributionCard
-          title="Work Orders by Sector"
-          data={data.sector_distribution}
-        />
 
-        <DistributionCard
-          title="Billing Status"
-          data={data.billing_status_distribution}
-        />
-      </div>
-    )
-  }
+        <div className="footer-center">
 
-  return null
-}
+          BUSINESS INTELLIGENCE AGENT
 
-function MetricCard({ label, value }) {
-  return (
-    <div className="metric-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
+        </div>
+
+
+        <div className="footer-status">
+
+          <span></span>
+
+          LIVE DATA CONNECTION
+
+        </div>
+
+      </footer>
+
     </div>
   )
-}
-
-function DistributionCard({ title, data }) {
-  if (!data) return null
-
-  return (
-    <div className="distribution-card">
-      <h4>{title}</h4>
-
-      {Object.entries(data).map(([key, value]) => (
-        <div className="distribution-row" key={key}>
-          <span>{key}</span>
-          <strong>{value}</strong>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function formatCurrency(value) {
-  const number = Number(value || 0)
-
-  if (number >= 10000000) {
-    return `₹${(number / 10000000).toFixed(2)} Cr`
-  }
-
-  if (number >= 100000) {
-    return `₹${(number / 100000).toFixed(2)} L`
-  }
-
-  return `₹${number.toLocaleString('en-IN', {
-    maximumFractionDigits: 0,
-  })}`
-}
-
-function formatPeriod(period) {
-  if (!period) return 'All time'
-
-  return period
-    .replaceAll('_', ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
 export default App
