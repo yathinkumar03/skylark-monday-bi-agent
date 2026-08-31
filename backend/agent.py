@@ -1,16 +1,16 @@
-from monday_client import (
+from backend.monday_client import (
     get_board_items,
     DEALS_BOARD_ID,
     WORK_ORDERS_BOARD_ID
 )
 
-from data_processor import (
+from backend.data_processor import (
     monday_items_to_dataframe,
     process_deals,
     process_work_orders
 )
 
-from bi_engine import (
+from backend.bi_engine import (
     pipeline_summary,
     sector_breakdown,
     available_sectors,
@@ -19,8 +19,8 @@ from bi_engine import (
     billing_summary
 )
 
-from query_engine import parse_question
-from response_formatter import format_answer
+from backend.query_engine import parse_question
+from backend.response_formatter import format_answer
 
 
 class BusinessIntelligenceAgent:
