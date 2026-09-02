@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 
-const API_URL = 'http://127.0.0.1:8000'
+const API_URL = 'https://skylark-monday-bi-agent-nb6l.onrender.com'
 
 const exampleQuestions = [
   {
@@ -63,8 +63,10 @@ function App() {
       const data = await response.json()
       setResult(data)
     } catch (err) {
+      console.error(err)
+
       setError(
-        'Unable to connect to the BI Agent. Please make sure the backend server is running.'
+        'Unable to connect to the BI Agent. Please check that the backend is running and accessible.'
       )
     } finally {
       setLoading(false)
@@ -91,7 +93,9 @@ function App() {
   }
 
   const getIntentLabel = () => {
-    if (!result?.intent?.intent) return 'BUSINESS ANALYSIS'
+    if (!result?.intent?.intent) {
+      return 'BUSINESS ANALYSIS'
+    }
 
     return result.intent.intent
       .replaceAll('_', ' ')
@@ -99,9 +103,13 @@ function App() {
   }
 
   const getPeriod = () => {
-    return result?.data?.period
-      ? result.data.period.replaceAll('_', ' ').toUpperCase()
-      : 'ALL TIME'
+    if (!result?.data?.period) {
+      return 'ALL TIME'
+    }
+
+    return result.data.period
+      .replaceAll('_', ' ')
+      .toUpperCase()
   }
 
   return (
@@ -133,6 +141,7 @@ function App() {
           </div>
 
           <div className="brand-info">
+
             <div className="brand-name">
               SKYLARK
             </div>
@@ -140,6 +149,7 @@ function App() {
             <div className="brand-subtitle">
               BUSINESS INTELLIGENCE
             </div>
+
           </div>
 
         </div>
@@ -148,12 +158,14 @@ function App() {
         <div className="topbar-right">
 
           <div className="system-status">
+
             <span className="status-light"></span>
 
             <div>
               <strong>LIVE</strong>
               <small>MONDAY.COM</small>
             </div>
+
           </div>
 
           <div className="version">
@@ -171,7 +183,6 @@ function App() {
 
       <main className="main">
 
-
         {/* =================================================
             HERO
         ================================================= */}
@@ -184,7 +195,9 @@ function App() {
 
               <span className="tag-line"></span>
 
-              <span>INTELLIGENT BUSINESS ANALYTICS</span>
+              <span>
+                INTELLIGENT BUSINESS ANALYTICS
+              </span>
 
               <span className="tag-line"></span>
 
@@ -205,10 +218,8 @@ function App() {
 
 
             <p className="hero-description">
-
               Turn your Monday.com data into actionable business intelligence.
               Ask questions naturally across pipeline, revenue, operations and billing.
-
             </p>
 
 
@@ -284,6 +295,7 @@ function App() {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask a question about your business..."
                 rows="3"
+                disabled={loading}
               />
 
               <div className="input-glow"></div>
@@ -320,7 +332,9 @@ function App() {
                 ) : (
                   <>
                     ANALYZE
-                    <span className="button-arrow">→</span>
+                    <span className="button-arrow">
+                      →
+                    </span>
                   </>
                 )}
 
@@ -344,6 +358,7 @@ function App() {
             <div className="section-heading">
 
               <div>
+
                 <span className="section-number">
                   01
                 </span>
@@ -351,6 +366,7 @@ function App() {
                 <span>
                   QUICK ANALYSIS
                 </span>
+
               </div>
 
               <p>
@@ -480,6 +496,7 @@ function App() {
 
               <button
                 onClick={askQuestion}
+                disabled={loading || !question.trim()}
               >
                 RETRY
               </button>
@@ -498,7 +515,6 @@ function App() {
         {result && !loading && (
 
           <section className="result-section">
-
 
             {/* RESULT HEADER */}
 
@@ -529,8 +545,13 @@ function App() {
                 className="new-query"
                 onClick={resetQuery}
               >
-                <span>+</span>
+
+                <span>
+                  +
+                </span>
+
                 NEW QUERY
+
               </button>
 
             </div>
@@ -545,7 +566,7 @@ function App() {
               </div>
 
               <div className="asked-question">
-                “{result.question}”
+                “{result.question || question}”
               </div>
 
             </div>
@@ -637,9 +658,7 @@ function App() {
 
 
                 <div className="intent-badge">
-
                   {getIntentLabel()}
-
                 </div>
 
               </div>
@@ -647,7 +666,7 @@ function App() {
 
               <div className="answer-content">
 
-                {result.answer || result.message}
+                {result.answer || result.message || 'No answer was returned.'}
 
               </div>
 
@@ -737,9 +756,7 @@ function App() {
 
 
         <div className="footer-center">
-
           BUSINESS INTELLIGENCE AGENT
-
         </div>
 
 
